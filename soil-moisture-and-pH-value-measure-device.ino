@@ -201,7 +201,7 @@ void loop() {
     display.println("%");
 
     drawFlaskIcon(0, 36);
-    display.setCursor(20, 42);
+    display.setCursor(20, 41);
     display.print("pH value: ");
     display.print(avgPH, 2);
 
