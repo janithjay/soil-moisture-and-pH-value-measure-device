@@ -57,8 +57,14 @@ void setup() {
   display.clearDisplay();
   display.setTextSize(1);
   display.setTextColor(SSD1306_WHITE);
-  display.setCursor(10, 20);
-  display.println("Soil & pH Meter");
+  display.setCursor(28, 7);
+  display.println("Soil Moisture");
+  display.setCursor(62, 21);
+  display.println("&");
+  display.setCursor(42, 35);
+  display.println("pH Meter");
+  display.setCursor(0, 55);
+  display.println("by: JJay Technologies");
   display.display();
   delay(1500);
 
