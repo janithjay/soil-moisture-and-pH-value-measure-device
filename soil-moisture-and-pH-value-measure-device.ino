@@ -25,6 +25,7 @@ int lastButton2State = HIGH;
 
 bool countdownMode = false;
 bool showAverage = false;
+static bool contactScreen = false; // Contact Us screen flag
 
 unsigned long startTime;
 const int countdownDuration = 30; // seconds
@@ -75,6 +76,37 @@ void setup() {
 void loop() {
   int button1State = digitalRead(buttonPin1);
   int button2State = digitalRead(buttonPin2);
+
+    // === Contact Us check ===
+  if (button1State == LOW && button2State == LOW) {
+    contactScreen = true; // activate contact screen
+    display.clearDisplay();
+    display.setTextSize(1);
+    display.setCursor(0, 10);
+    display.println("Need a Project?");
+    display.setCursor(59, 19);
+    display.println("Contact Us!");
+    display.setCursor(0, 38);
+    display.println("JJay Technologies");
+    display.setCursor(0, 51);
+    display.println("Phone:+94 70 121 0767");
+    display.display();
+  }
+
+  // Exit contact screen if active and any single button pressed
+  if (contactScreen && (button1State == LOW || button2State == LOW) && !(button1State == LOW && button2State == LOW)) {
+    contactScreen = false; // leave contact screen
+    hold = false;
+    countdownMode = false;
+    showAverage = false;
+    performSensorRead(&lastSoilRaw, &lastSoilPercent, &lastPhRaw, &lastPhVoltage, &lastPHValue); // refresh readings
+  }
+
+  // Skip rest of loop if Contact screen is active
+  if (contactScreen) {
+    delay(50);
+    return;
+  }
 
   // === Button 1 pressed ===
   if (button1State == LOW && lastButton1State == HIGH) {
