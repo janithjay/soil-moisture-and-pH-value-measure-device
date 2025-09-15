@@ -1,139 +1,106 @@
-#include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 
+// === OLED setup ===
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 64
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 
-// Button pins
-const int buttonNav = 2;   // Navigation button
-const int buttonSelect = 3; // Select / Back button
+// === Pins ===
+const int soilPin = A0;   // Soil sensor analog pin
+const int phPin   = A1;   // pH sensor analog pin
+const int buttonPin = 2;  // Push button pin
 
-// Sensor pins
-const int soilPin = A0;   // Capacitive Soil Moisture Sensor
-const int phPin = A1;     // PH4502C Module
+// === Calibration Defaults (No user calibration needed) ===
+// Soil Moisture v2.0 typical values
+int soilDry = 690;   // Dry soil (~0%)
+int soilWet = 470;    // Wet soil (~100%)
 
-// Menu variables
-int menuIndex = 0;
-const int menuLength = 2;
-String menuItems[menuLength] = {"Measure Mode", "Calibration"};
+// PH4502C calibration (using pH 4 and 7 buffer solutions)
+float cal4 = 3.88;    // Voltage at pH 4.01
+float cal7 = 3.08;    // Voltage at pH 7.00
 
-bool inMeasureMode = false;
-
-// For button handling
-unsigned long lastDebounceTime = 0;
-unsigned long debounceDelay = 200; // ms
-bool lastNavState = HIGH;
-bool lastSelectState = HIGH;
-
-unsigned long selectPressTime = 0;
-bool selectPressed = false;
+// === Variables ===
+bool hold = false;         
+int lastButtonState = HIGH;
 
 void setup() {
-  pinMode(buttonNav, INPUT_PULLUP);
-  pinMode(buttonSelect, INPUT_PULLUP);
+  pinMode(buttonPin, INPUT_PULLUP);
+  Serial.begin(9600);
 
-  display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
+  if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
+    Serial.println(F("SSD1306 allocation failed"));
+    for (;;);
+  }
   display.clearDisplay();
   display.setTextSize(1);
   display.setTextColor(SSD1306_WHITE);
-  display.setCursor(0,0);
-  display.println("Soil & PH Meter");
+  display.setCursor(10, 20);
+  display.println("Soil & pH Meter");
   display.display();
-  delay(2000);
+  delay(1500);
 }
 
 void loop() {
-  handleButtons();
+  int buttonState = digitalRead(buttonPin);
 
-  if (inMeasureMode) {
-    showMeasureMode();
-  } else {
-    showMenu();
+  // Toggle hold state
+  if (buttonState == LOW && lastButtonState == HIGH) {
+    hold = !hold;
+    delay(200); // debounce
   }
-}
+  lastButtonState = buttonState;
 
-void handleButtons() {
-  bool navState = digitalRead(buttonNav);
-  bool selectState = digitalRead(buttonSelect);
+  if (!hold) {
+    // === Soil Moisture ===
+    int soilRaw = analogRead(soilPin);
+    int soilPercent = map(soilRaw, soilDry, soilWet, 0, 100);
+    soilPercent = constrain(soilPercent, 0, 100);
 
-  // Navigation button
-  if (navState == LOW && lastNavState == HIGH && millis() - lastDebounceTime > debounceDelay) {
-    menuIndex = (menuIndex + 1) % menuLength;
-    lastDebounceTime = millis();
+    // === pH Reading (using pH4–pH7 calibration) ===
+    int phRaw = analogRead(phPin) - 170;
+    float phVoltage = phRaw * (5.0 / 1023.0);
+
+    // Linear interpolation formula
+    float slope = (7.0 - 4.0) / (cal7 - cal4);
+    float intercept = 7.0 - slope * cal7;
+    float pHValue = slope * phVoltage + intercept;
+
+    // === OLED Display ===
+    display.clearDisplay();
+    display.setTextSize(1);
+
+    display.setCursor(0, 0);
+    display.println("Soil Moisture:");
+
+    display.setCursor(0, 12);
+    display.print("Raw: ");
+    display.print(soilRaw);
+
+    display.setCursor(0, 24);
+    display.print("Level: ");
+    display.print(soilPercent);
+    display.println("%");
+
+    display.setCursor(0, 36);
+    display.println("pH Sensor:");
+
+    display.setCursor(0, 48);
+    display.print("Raw: ");
+    display.print(phRaw);
+
+    display.setCursor(64, 48);
+    display.print("pH: ");
+    display.print(pHValue, 2);
+
+    display.display();
+
+    // === Serial Output ===
+    Serial.print("Soil Raw: "); Serial.print(soilRaw);
+    Serial.print(" | Moisture: "); Serial.print(soilPercent); Serial.println("%");
+
+    Serial.print("pH Raw: "); Serial.print(phRaw);
+    Serial.print(" | Voltage: "); Serial.print(phVoltage, 2);
+    Serial.print(" V | pH: "); Serial.println(pHValue, 2);
   }
-  lastNavState = navState;
-
-  // Select button
-  if (selectState == LOW && lastSelectState == HIGH) {
-    selectPressTime = millis();
-    selectPressed = true;
-  }
-
-  if (selectState == HIGH && lastSelectState == LOW) {
-    if (selectPressed && (millis() - selectPressTime < 1000)) {
-      if (!inMeasureMode) {
-        if (menuIndex == 0) {
-          inMeasureMode = true; // Enter Measure Mode
-        }
-        else if (menuIndex == 1) {
-          calibrationMode();
-        }
-      }
-    }
-    selectPressed = false;
-  }
-
-  // Long press for back
-  if (selectPressed && (millis() - selectPressTime > 3000)) {
-    inMeasureMode = false;
-    selectPressed = false;
-  }
-
-  lastSelectState = selectState;
-}
-
-void showMenu() {
-  display.clearDisplay();
-  display.setCursor(0, 0);
-  display.println("Menu:");
-
-  for (int i = 0; i < menuLength; i++) {
-    if (i == menuIndex) display.print("> ");
-    else display.print("  ");
-    display.println(menuItems[i]);
-  }
-
-  display.display();
-}
-
-void showMeasureMode() {
-  int soilValue = analogRead(soilPin);
-  float soilPercent = map(soilValue, 1023, 200, 0, 100); // adjust mapping
-
-  int phValue = analogRead(phPin);
-  float voltage = phValue * (5.0 / 1023.0);
-  float ph = 7 + ((2.5 - voltage) / 0.18); // rough PH calc
-
-  display.clearDisplay();
-  display.setCursor(0, 0);
-  display.println("Measure Mode:");
-  display.print("Soil: ");
-  display.print(soilPercent);
-  display.println("%");
-  display.print("pH: ");
-  display.println(ph, 2);
-  display.display();
-
-  delay(500);
-}
-
-void calibrationMode() {
-  display.clearDisplay();
-  display.setCursor(0, 0);
-  display.println("Calibration Mode");
-  display.println("Place in solution");
-  display.display();
-  delay(3000);
 }
