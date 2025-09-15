@@ -195,13 +195,13 @@ void loop() {
     display.setTextSize(1);
     display.println("Average (30s)");
 
-    display.setCursor(20, 16);
+    display.setCursor(20, 20);
     display.print("Moisture: ");
     display.print(avgSoil, 1);
     display.println("%");
 
     drawFlaskIcon(0, 36);
-    display.setCursor(20, 38);
+    display.setCursor(20, 42);
     display.print("pH value: ");
     display.print(avgPH, 2);
 
@@ -251,7 +251,7 @@ void displayReadings() {
   // Water icon + soil label
   drawWaterIcon(0, 0);
   display.setCursor(20, 0);
-  display.println("Soil Moisture");
+  display.println("Soil Moisture:");
 
   /*display.setCursor(20, 12);
   display.print("Raw: ");
@@ -263,17 +263,17 @@ void displayReadings() {
   display.println("%");
 
   // Flask icon + pH label
-  drawFlaskIcon(0, 36);
-  display.setCursor(20, 36);
-  display.println("pH Sensor");
+  drawFlaskIcon(0, 30);
+  display.setCursor(20, 30);
+  display.println("pH Sensor:");
 
-  display.setCursor(20, 48);
+  display.setCursor(20, 42);
   display.print("pH: ");
   display.print(lastPHValue, 2);
 
   // HOLD indicator (top-right)
   if (hold) {
-    display.setCursor(103, 0);
+    display.setCursor(104, 0);
     display.setTextSize(1);
     display.println("HOLD");
     // Optionally print to serial:
