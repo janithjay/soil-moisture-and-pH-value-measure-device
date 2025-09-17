@@ -82,10 +82,10 @@ void loop() {
     display.setTextSize(1);
     display.setCursor(0, 10);
     display.println("Need a Project?");
-    display.setCursor(59, 19);
-    display.println("Contact Us!");
+    display.setCursor(62, 20);
+    display.println("Contact Me!");
     display.setCursor(0, 38);
-    display.println("JJay Technologies");
+    display.println("Janith Jayashan");
     display.setCursor(0, 51);
     display.println("Phone:+94 70 121 0767");
     display.display();
