@@ -80,13 +80,13 @@ void loop() {
     contactScreen = true; // activate contact screen
     display.clearDisplay();
     display.setTextSize(1);
-    display.setCursor(0, 10);
+    display.setCursor(20, 6);
     display.println("Need a Project?");
-    display.setCursor(62, 20);
+    display.setCursor(35, 16);
     display.println("Contact Me!");
-    display.setCursor(0, 38);
+    display.setCursor(20, 41);
     display.println("Janith Jayashan");
-    display.setCursor(0, 51);
+    display.setCursor(0, 54);
     display.println("Phone:+94 70 121 0767");
     display.display();
   }
