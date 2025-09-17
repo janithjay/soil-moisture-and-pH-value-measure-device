@@ -58,14 +58,12 @@ void setup() {
   display.clearDisplay();
   display.setTextSize(1);
   display.setTextColor(SSD1306_WHITE);
-  display.setCursor(28, 7);
+  display.setCursor(25, 17);
   display.println("Soil Moisture");
-  display.setCursor(62, 21);
+  display.setCursor(59, 31);
   display.println("&");
-  display.setCursor(42, 35);
+  display.setCursor(39, 45);
   display.println("pH Meter");
-  display.setCursor(0, 55);
-  display.println("by: JJay Technologies");
   display.display();
   delay(1500);
 
