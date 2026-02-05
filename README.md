@@ -140,9 +140,6 @@ Connect to the Serial Monitor at **9600 baud** to view detailed readings:
 ## Project Information
 
 **Developer**: Janith Jayashan  
-**Contact**: +94 70 121 0767
-
-Need a custom project? Feel free to reach out!
 
 ## License
 
